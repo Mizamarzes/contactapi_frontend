@@ -1,23 +1,29 @@
-import logo from './logo.svg';
+import { useEffect, useState } from 'react';
 import './App.css';
+import { getContacts } from './api/ContactService';
 
 function App() {
+  const [data, setData] = useState({});
+  const [currentPage, setCurrentPage] = useState(0);
+
+  const getAllContacts = async (page = 0, size = 10) => {
+    try {
+      setCurrentPage(page);
+      const { data } = await getContacts(page, size);
+      setData(data);
+      console.log(data);
+    } catch(error) {
+      console.log(error);
+    }
+  }
+
+  useEffect(() => {
+    getAllContacts();
+  }, []);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <h1>Hello</h1>
     </div>
   );
 }
