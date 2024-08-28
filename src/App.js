@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
+import 'react-toastify/dist/ReactToastify.css';
 import Header from './components/Header'
 import ContactList from './components/ContactList'
-import ContactDetails from './components/ContactDetails'
-import { getContacts, saveContact, udpatePhoto, updateContact, updatePhoto } from './api/ContactService';
+import { getContacts, saveContact, updatePhoto } from './api/ContactService';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import ContactDetail from './components/ContactDetails';
+import { toastError } from './api/ToastService';
+import { ToastContainer } from 'react-toastify';
 
 function App() {
   const modalRef = useRef();
@@ -26,10 +29,11 @@ function App() {
       const { data } = await getContacts(page, size);
       setData(data);
       console.log(data);
-    } catch(error) {
+    } catch (error) {
       console.log(error);
+      toastError(error.message);
     }
-  }
+  };
 
   const onChange = (event) => {
     setValues({ ...values, [event.target.name]: event.target.value });
@@ -37,7 +41,7 @@ function App() {
 
   const handleNewContact = async (event) => {
     event.preventDefault();
-    try{
+    try {
       const { data } = await saveContact(values);
       const formData = new FormData();
       formData.append('file', file, file.name);
@@ -55,16 +59,32 @@ function App() {
         status: '',
       })
       getAllContacts();
-    }catch(error) {
+    } catch (error) {
       console.log(error);
+      toastError(error.message);
     }
   };
 
-  const updateContact = async () => { };
+  const updateContact = async (contact) => {
+    try {
+      const { data } = await saveContact(contact);
+      console.log(data);
+    } catch (error) {
+      console.log(error);
+      toastError(error.message);
+    }
+  };
 
-  const updateImage = async () => { };
+  const updateImage = async (formData) => {
+    try {
+      const { data: photoUrl } = await updatePhoto(formData);
+    } catch (error) {
+      console.log(error);
+      toastError(error.message);
+    }
+  };
 
-  const toggleModal = (show) => show ? modalRef.current.showModal() : modalRef.current.close();
+  const toggleModal = show => show ? modalRef.current.showModal() : modalRef.current.close();
 
   useEffect(() => {
     getAllContacts();
@@ -73,18 +93,18 @@ function App() {
   return (
     <>
       <Header toggleModal={toggleModal} nbOfContacts={data.totalElements} />
-        <main className='main'>
-          <div className='container'>
-            <Routes>
-              <Route path='/' element={<Navigate to={'/contacts'} />}/>
-              <Route path="/contacts" element={<ContactList data={data} currentPage={currentPage} getAllContacts={getAllContacts} />} />
-              <Route path="/contacts/:id" element={<ContactDetails updateContact={updateContact} updateImage={updateImage} />} />
-            </Routes>
-          </div>
-        </main>
+      <main className='main'>
+        <div className='container'>
+          <Routes>
+            <Route path='/' element={<Navigate to={'/contacts'} />} />
+            <Route path="/contacts" element={<ContactList data={data} currentPage={currentPage} getAllContacts={getAllContacts} />} />
+            <Route path="/contacts/:id" element={<ContactDetail updateContact={updateContact} updateImage={updateImage} />} />
+          </Routes>
+        </div>
+      </main>
 
       {/* Modal */}
-      <dialog ref={ modalRef } className="modal" id="modal">
+      <dialog ref={modalRef} className="modal" id="modal">
         <div className="modal__header">
           <h3>New Contact</h3>
           <i onClick={() => toggleModal(false)} className="bi bi-x-lg"></i>
@@ -129,6 +149,7 @@ function App() {
           </form>
         </div>
       </dialog>
+      <ToastContainer />
     </>
   );
 }
